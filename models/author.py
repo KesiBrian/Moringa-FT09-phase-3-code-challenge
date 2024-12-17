@@ -1,47 +1,37 @@
-from typing import List, TYPE_CHECKING
-from database.connection import Connection
-
-if TYPE_CHECKING:
-    from models.article import Article
-    from models.magazine import Magazine
+from database.connection import get_db_connection
 
 class Author:
-    def __init__(self, id: int, name: str):
-        if not isinstance(id, int):
-            raise ValueError("ID must be an integer.")
-        if not isinstance(name, str) or len(name) == 0:
-            raise ValueError("Name must be a non-empty string.")
-
+    def _init_(self, id, name):
         self._id = id
-        self._name = name
+        self.name = name
 
     @property
-    def id(self) -> int:
+    def id(self):
         return self._id
 
     @property
-    def name(self) -> str:
+    def name(self):
         return self._name
 
     @name.setter
-    def name(self, value: str):
-        raise AttributeError("Cannot change name after initialization.")
+    def name(self, value):
+        if isinstance(value, str) and len(value) > 0:
+            self._name = value
+        else:
+            self._name = None
+            print("Author name must be a non-empty string.")
 
-    def articles(self, connection: Connection) -> List["Article"]:
-        """Fetch all articles by this author."""
-        query = "SELECT * FROM articles WHERE author_id = ?;"
-        rows = connection.get_db_connection().execute(query, (self.id,)).fetchall()
-        from models.article import Article  # Local import to avoid circular dependency
-        return [Article(**dict(row)) for row in rows]
+    @classmethod
+    def get_all(cls):
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM authors")
+        authors = cursor.fetchall()
+        conn.close()
+        return [cls(author["id"], author["name"]) for author in authors]
 
-    def magazines(self, connection: Connection) -> List["Magazine"]:
-        """Fetch all distinct magazines associated with this author."""
-        query = """
-            SELECT DISTINCT m.*
-            FROM magazines m
-            JOIN articles a ON a.magazine_id = m.id
-            WHERE a.author_id = ?;
-        """
-        rows = connection.get_db_connection().execute(query, (self.id,)).fetchall()
-        from models.magazine import Magazine  # Local import to avoid circular dependency
-        return [Magazine(**dict(row)) for row in rows]
+    def _repr_(self):
+        if self._name:
+            return f"Author(id={self.id}, name={self.name})"
+        else:
+            return f"Author(id={self.id}, INVALID ENTRY)"

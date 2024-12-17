@@ -19,19 +19,18 @@ def main():
     conn = get_db_connection()
     cursor = conn.cursor()
 
-
     '''
-        The following is just for testing purposes, 
-        you can modify it to meet the requirements of your implmentation.
+        The following is just for testing purposes,
+        you can modify it to meet the requirements of your implementation.
     '''
 
     # Create an author
     cursor.execute('INSERT INTO authors (name) VALUES (?)', (author_name,))
-    author_id = cursor.lastrowid # Use this to fetch the id of the newly created author
+    author_id = cursor.lastrowid  # Use this to fetch the id of the newly created author
 
     # Create a magazine
     cursor.execute('INSERT INTO magazines (name, category) VALUES (?,?)', (magazine_name, magazine_category))
-    magazine_id = cursor.lastrowid # Use this to fetch the id of the newly created magazine
+    magazine_id = cursor.lastrowid  # Use this to fetch the id of the newly created magazine
 
     # Create an article
     cursor.execute('INSERT INTO articles (title, content, author_id, magazine_id) VALUES (?, ?, ?, ?)',
@@ -39,9 +38,7 @@ def main():
 
     conn.commit()
 
-    # Query the database for inserted records. 
-    # The following fetch functionality should probably be in their respective models
-
+    # Query the database for inserted records.
     cursor.execute('SELECT * FROM magazines')
     magazines = cursor.fetchall()
 
@@ -56,15 +53,10 @@ def main():
     # Display results
     print("\nMagazines:")
     for magazine in magazines:
-        print(Magazine(magazine["id"], magazine["name"], magazine["category"]))
+        # Assuming magazine is a tuple (id, name, category), create a Magazine instance
+        mag_obj = Magazine(magazine[0], magazine[1], magazine[2])
+        print(mag_obj)
 
-    print("\nAuthors:")
-    for author in authors:
-        print(Author(author["id"], author["name"]))
-
-    print("\nArticles:")
-    for article in articles:
-        print(Article(article["id"], article["title"], article["content"], article["author_id"], article["magazine_id"]))
 
 if __name__ == "__main__":
     main()
